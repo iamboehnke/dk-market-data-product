@@ -5,12 +5,12 @@
 set -euo pipefail
 
 # Ret disse fire, før du kører
-LOCATION="northeurope"                 # samme region som din eksisterende gratis SQL-database
+LOCATION="swedencentral"                 # samme region som din eksisterende gratis SQL-database
 INITIALS="mb"                          # gør globale navne unikke
-SQL_SERVER="REPLACE_EXISTING_SERVER"   # navnet på din SQL-server fra regnprojektet (uden .database.windows.net)
-SQL_RG="REPLACE_SQL_RESOURCE_GROUP"    # ressourcegruppen, serveren ligger i
+SQL_SERVER="sql-dk-market-data-mb"   # navnet på din SQL-server (uden .database.windows.net)
+SQL_RG="group-dk-market-data-product"    # ressourcegruppen, serveren ligger i
 
-RG="rg-kroner-og-renter"
+RG="group-dk-market-data-product"
 LAKE="stkrlake${INITIALS}$RANDOM"      # datasø, privat (ADLS Gen2)
 PUB="stkrpub${INITIALS}$RANDOM"        # offentlig, kun ét container med færdige JSON-filer
 FUNCSTORE="stkrfunc${INITIALS}$RANDOM" # funktionsappens egen lagerkonto
@@ -77,7 +77,7 @@ az webapp config appsettings set -g "$RG" -n "$API" -o none --settings \
   DJANGO_ALLOWED_HOSTS="$API.azurewebsites.net" \
   DATA_BASE_URL="https://$PUB.blob.core.windows.net/public/kroner-og-renter/v1" \
   CORS_ALLOWED_ORIGINS="https://mikkelbohnke.com,https://www.mikkelbohnke.com" \
-  GITHUB_REPO_URL="https://github.com/iamboehnke/azure-kroner-og-renter"
+  GITHUB_REPO_URL="https://github.com/iamboehnke/dk-market-data-product"
 
 cat <<EOF
 
