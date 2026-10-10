@@ -7,3 +7,4 @@ pipeline/local.settings.json
 api/staticfiles/
 .python_packages/
 .DS_Store
+venv-azure-bankdata/
