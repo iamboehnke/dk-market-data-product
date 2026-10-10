@@ -1,2 +1,0 @@
-mssql_py_core
-mssql_python
