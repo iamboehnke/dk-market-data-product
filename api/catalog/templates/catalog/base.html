@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Kroner og renter{% endblock %} | Datakatalog</title>
+  <link rel="stylesheet" href="{% static 'catalog/site.css' %}">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="{% url 'index' %}">Kroner og renter <span>datakatalog</span></a>
+      <nav>
+        <a href="{% url 'index' %}">Produkter</a>
+        <a href="{% url 'api_index' %}">API</a>
+        <a href="{{ repo }}">Kode</a>
+        <a href="https://mikkelbohnke.com">mikkelbohnke.com</a>
+      </nav>
+    </div>
+  </header>
+  <main><div class="wrap">{% block content %}{% endblock %}</div></main>
+  <footer><div class="wrap">
+    Kilde: Danmarks Nationalbank via Danmarks Statistiks Statistikbank. Bygget af Mikkel Bøhnke som læringsprojekt
+    på Azure Functions, ADLS Gen2, Azure SQL og Django. Ikke finansiel rådgivning.
+  </div></footer>
+</body>
+</html>

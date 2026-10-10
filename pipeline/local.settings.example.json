@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "LAKE_ACCOUNT_URL": "https://<dit-lake-konto>.blob.core.windows.net",
+    "PUBLIC_ACCOUNT_URL": "https://<din-public-konto>.blob.core.windows.net",
+    "PUBLIC_CONTAINER": "public",
+    "PUBLIC_PREFIX": "kroner-og-renter/v1",
+    "SQL_SERVER": "<din-server>.database.windows.net",
+    "SQL_DATABASE": "kroner-og-renter",
+    "SQL_AUTHENTICATION": "ActiveDirectoryDefault",
+    "LOOKBACK_PERIODS": "10",
+    "BACKFILL_PERIODS": "500"
+  }
+}

@@ -1,0 +1,51 @@
+{% extends "catalog/base.html" %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block content %}
+<p class="meta"><a href="{% url 'index' %}">Produkter</a> / {{ p.id }}</p>
+<h1>{{ p.name }}</h1>
+<p class="lede">{{ p.description }}</p>
+<p class="meta"><span class="pill {{ p.status }}">{{ p.status }}</span>
+  Domæne {{ p.domain }} · version {{ p.version }} · ejer {{ p.owner }} · kilde {{ p.source }}</p>
+
+<h2>Lineage for seneste kørsel</h2>
+<div class="flow">
+  <div class="step"><b>Kilde</b>Statistikbanken, tabel {{ contract.source.table }}</div><div class="arrow">&rarr;</div>
+  <div class="step"><b>Bronze</b>Rå CSV, uændret<br><code>{{ p.lineage.bronze|default:"-" }}</code></div><div class="arrow">&rarr;</div>
+  <div class="step"><b>Silver</b>Typet, MERGE på nøgle<br><code>{% firstof p.lineage.silver p.lineage.quarantine "-" %}</code></div><div class="arrow">&rarr;</div>
+  <div class="step"><b>Gold</b>Navne og ændringer<br><code>{{ p.lineage.gold|default:"-" }}</code></div><div class="arrow">&rarr;</div>
+  <div class="step"><b>Forbrugere</b>{% for c in p.consumers %}{{ c }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>
+</div>
+
+<h2>Datakontrakt</h2>
+<p class="meta">Grain: {{ contract.grain }}. Nøgle: <code>{{ contract.primary_key|join:", " }}</code>. {{ contract.schedule }}</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Kolonne</th><th>Type</th><th>Tom tilladt</th><th>Beskrivelse</th></tr></thead>
+  <tbody>{% for c in contract.schema %}
+  <tr><td><code>{{ c.name }}</code></td><td>{{ c.type }}</td><td>{{ c.nullable|yesno:"ja,nej" }}</td><td>{{ c.description }}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+
+<h2>Kvalitetstjek i seneste kørsel</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Tjek</th><th>Mål</th><th>Alvor</th><th>Resultat</th><th>Detaljer</th></tr></thead>
+  <tbody>{% for c in p.checks %}
+  <tr>
+    <td><code>{{ c.check }}</code>{% if c.description %}<div class="meta">{{ c.description }}</div>{% endif %}</td>
+    <td>{{ c.target }}</td><td>{{ c.severity }}</td>
+    <td>{% if c.passed %}<span class="pill ok">bestået</span>{% elif c.severity == "warn" %}<span class="pill warn">advarsel</span>{% else %}<span class="pill bad">fejl</span>{% endif %}</td>
+    <td class="meta">{{ c.details }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="5">Ingen tjek registreret.</td></tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Seneste rækker</h2>
+<div class="table-wrap"><table>
+  <thead><tr>{% for c in sample_cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in sample %}<tr>{% for v in row.values %}<td>{{ v|default_if_none:"" }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+
+<h2>Brug det via API</h2>
+<pre>GET {{ api_base }}products/{{ p.id }}/
+GET {{ api_base }}products/{{ p.id }}/data/?from=2026-09-01&amp;code={{ first_code }}&amp;limit=100
+GET {{ api_base }}latest/</pre>
+{% endblock %}

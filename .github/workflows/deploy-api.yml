@@ -1,0 +1,52 @@
+name: Django-API – test og deploy til App Service
+
+on:
+  push:
+    branches: [main]
+    paths: ["api/**", ".github/workflows/deploy-api.yml"]
+  pull_request:
+    paths: ["api/**"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Byg testdata med pipelinen (lokal tilstand, ingen Azure)
+        working-directory: pipeline
+        run: |
+          pip install -r requirements.txt
+          python -m dataproduct.run --local-dir ./_local --fixtures tests/fixtures/run1 --today 2026-10-09 --skip-sql
+          python -m dataproduct.run --local-dir ./_local --fixtures tests/fixtures/run2 --today 2026-10-09 --skip-sql
+      - name: Test Django
+        working-directory: api
+        run: |
+          pip install -r requirements.txt
+          python manage.py check --deploy --fail-level ERROR
+          python manage.py collectstatic --noinput
+          python manage.py test
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.API_APP_NAME }}
+          package: api

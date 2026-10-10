@@ -1,0 +1,54 @@
+{% extends "catalog/base.html" %}
+{% block content %}
+<h1>Ét dataprodukt, flere forbrugere</h1>
+<p class="lede">Nationalbankens valutakurser og renter hentes automatisk hver hverdag, renses gennem en
+  medaljonarkitektur (bronze, silver, gold), tjekkes mod en datakontrakt og publiceres derefter til
+  en hjemmeside, dette API og en SQL-database. Opdateret {{ updated|date:"d.m.Y H:i" }}.</p>
+
+<div class="stats">
+  {% for r in latest.rates %}{% if r.instrument == "OFONAA" or r.instrument == "DESNAA" %}
+  <div class="stat"><div class="k">{{ r.name }}</div>
+    <div class="v">{{ r.rate_pct|floatformat:2 }} %</div>
+    <div class="d meta">{{ r.date }}</div></div>
+  {% endif %}{% endfor %}
+  {% for f in latest.fx|slice:":4" %}
+  <div class="stat"><div class="k">{{ f.currency }} i kroner</div>
+    <div class="v">{{ f.dkk_per_unit|floatformat:4 }}</div>
+    <div class="d {% if f.change_1d_pct > 0 %}up{% elif f.change_1d_pct < 0 %}down{% else %}flat{% endif %}">
+      {% if f.change_1d_pct != None %}{{ f.change_1d_pct|floatformat:2 }} %{% endif %}</div></div>
+  {% endfor %}
+</div>
+
+<h2>Dataprodukter</h2>
+<div class="grid">
+  {% for p in products %}
+  <div class="card">
+    <h3><a href="{% url 'product' p.id %}">{{ p.name }}</a></h3>
+    <div class="meta">{{ p.domain }} · v{{ p.version }} · ejer {{ p.owner }}</div>
+    <p>{{ p.description|truncatechars:170 }}</p>
+    <div class="meta">
+      <span class="pill {{ p.status }}">{{ p.status }}</span>
+      {{ p.passed }} af {{ p.checks|length }} kvalitetstjek bestået · {{ p.rows }} rækker · seneste dato {{ p.latest_date }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>Seneste kørsler</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Kørsel</th><th>Status</th><th>Tjek</th><th>Nye rækker</th><th>Revideret</th><th>Udfyldt</th><th>SQL</th></tr></thead>
+  <tbody>
+  {% for r in runs %}
+  <tr>
+    <td><code>{{ r.run_id }}</code></td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td class="num">{{ r.quality.passed }}/{{ r.quality.total }}</td>
+    <td class="num">{{ r.inserted }}</td>
+    <td class="num">{{ r.revised }}</td>
+    <td class="num">{{ r.filled }}</td>
+    <td>{{ r.sql }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

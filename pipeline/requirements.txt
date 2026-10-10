@@ -1,0 +1,8 @@
+azure-functions>=1.21
+azure-identity>=1.19
+azure-storage-blob>=12.24
+mssql-python>=1.0
+pandas>=2.2
+pyarrow>=17
+pyyaml>=6.0
+requests>=2.32

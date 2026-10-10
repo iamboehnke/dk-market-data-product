@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kroner og renter | Mikkel Bøhnke</title>
+  <meta name="description" content="Et automatiseret dataprodukt på Azure: Nationalbankens kurser og renter gennem bronze, silver og gold til en hjemmeside, et API og en database.">
+  <style>
+    :root { --bg:#f7f6f2; --text:#1d1f22; --muted:#5f6368; --line:#e3e1da; --surface:#fff; --accent:#1f5c4a; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#141517; --text:#e8e6e1; --muted:#a3a29d; --line:#2e3034; --surface:#1c1e21; --accent:#7cc4a8; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 48px 16px 80px; }
+    a { color: var(--accent); }
+    h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 8px; }
+    h2 { font-size: 1.25rem; margin: 44px 0 10px; }
+    .lede { color: var(--muted); font-size: 1.1rem; margin-bottom: 28px; }
+    .flow { display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:8px; margin: 16px 0; }
+    .flow div { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:.85rem; }
+    .flow b { display:block; font-size:.92rem; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .tags { display:flex; flex-wrap:wrap; gap:6px; margin: 12px 0 0; padding:0; list-style:none; }
+    .tags li { border:1px solid var(--line); border-radius:99px; padding:2px 10px; font-size:.82rem; color:var(--muted); margin:0; }
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="/">mikkelbohnke.com</a></p>
+  <h1>Kroner og renter</h1>
+  <p class="lede">Et lille, fuldt automatiseret dataprodukt på Azure. Nationalbankens valutakurser og renter
+    bygges én gang og bruges tre steder: her på siden, i et Django-API og i en SQL-database.</p>
+
+  <!-- Widgetten herunder er live. Den henter dagens tal direkte fra Azure. -->
+  <div class="kr-widget"
+       data-src="https://REPLACE_PUBLIC_ACCOUNT.blob.core.windows.net/public/kroner-og-renter/v1/latest.json"
+       data-catalog="https://REPLACE_API_APP.azurewebsites.net/"
+       data-repo="https://github.com/iamboehnke/azure-kroner-og-renter"></div>
+  <script src="kroner-og-renter.js" defer></script>
+
+  <h2>Hvad sker der hver morgen</h2>
+  <div class="flow">
+    <div><b>Kilde</b>Statistikbankens åbne API, tabellerne DNVALD og DNRENTD</div>
+    <div><b>Bronze</b>Rå svar gemmes uændret i Azure Data Lake</div>
+    <div><b>Silver</b>Typede rækker, idempotent MERGE på dato og kode</div>
+    <div><b>Kvalitet</b>15 tjek fra en datakontrakt i YAML</div>
+    <div><b>Gold</b>Navne, ændringer og historik</div>
+    <div><b>Forbrugere</b>Denne side, Django-API og Azure SQL</div>
+  </div>
+  <p>En Azure Function med timer starter kørslen på hverdage. Den henter et overlap på ti bankdage, så tal,
+    der kommer for sent eller bliver rettet, kommer med næste gang uden dubletter. DESTR offentliggøres
+    for eksempel en dag efter de andre renter og udfyldes automatisk ved næste kørsel.</p>
+
+  <h2>Hvorfor det er bygget sådan</h2>
+  <ul>
+    <li><strong>Byg én gang, brug flere steder.</strong> Den samme gold-version føder alle tre forbrugere, og
+      kontrakten beskriver skema, nøgle, ejer og forventninger, så andre kan bruge data uden at spørge mig.</li>
+    <li><strong>Kvalitet stopper dårlige data.</strong> Fejler et tjek, for eksempel hvis euroen ligger uden for
+      ERM II-båndet, publiceres batchen ikke. Den lægges i karantæne, og siden her viser stadig sidste gode tal.</li>
+    <li><strong>Lineage pr. kørsel.</strong> Hver række i SQL har et run_id, og datakataloget viser stierne fra
+      bronze til gold for den seneste kørsel.</li>
+    <li><strong>Ingen hemmeligheder.</strong> Funktionen bruger managed identity til både datasøen og databasen,
+      og GitHub deployer med OIDC i stedet for gemte nøgler.</li>
+    <li><strong>Næsten gratis.</strong> Functions Flex Consumption, gratis-tilbuddet på Azure SQL og App Service F1
+      dækker driften. Det koster øre om måneden i lager.</li>
+  </ul>
+
+  <h2>Teknik</h2>
+  <ul class="tags">
+    <li>Python</li><li>pandas</li><li>Azure Functions</li><li>ADLS Gen2</li><li>Azure SQL</li><li>T-SQL MERGE</li>
+    <li>Django</li><li>App Service</li><li>GitHub Actions</li><li>Managed identity</li><li>Medaljonarkitektur</li>
+  </ul>
+
+  <h2>Ærligt om begrænsningerne</h2>
+  <p>Det er et læringsprojekt med en lille datamængde. Transformationerne kører i pandas i en Azure Function,
+    fordi det er gratis og nok til et par tusinde rækker om året. I en rigtig platform ville samme logik ligge i
+    Databricks som Delta-tabeller og et planlagt job, og MERGE-trinnet er skrevet, så det kan flyttes direkte.</p>
+  <p><a href="https://github.com/iamboehnke/azure-kroner-og-renter">Se koden på GitHub</a></p>
+</main>
+</body>
+</html>
