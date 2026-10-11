@@ -34,7 +34,7 @@ class SqlLoader:
     def __init__(self, server: str, database: str, authentication: str):
         self.conn_str = (
             f"Server=tcp:{server},1433;Database={database};Authentication={authentication};"
-            "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=60;"
+            "Encrypt=yes;TrustServerCertificate=no;"
         )
         self.conn = None
 
