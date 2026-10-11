@@ -34,30 +34,6 @@ gold    navne, ændringer, historik         ADLS Gen2 (Parquet)
 | `infra/` | Azure CLI-scripts til ressourcer og GitHub OIDC |
 | `.github/workflows/` | Test og deploy af pipeline og API ved push til `main` |
 
-## Kør det lokalt uden Azure
-
-```bash
-cd pipeline
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt pytest
-pytest -q
-
-# En hel kørsel mod testdata, skriver bronze/silver/gold/public til ./_local
-python -m dataproduct.run --local-dir ./_local --fixtures tests/fixtures/run1 --today 2026-10-09 --skip-sql
-# Næste dags kørsel: DESTR udfyldes, en revision fanges
-python -m dataproduct.run --local-dir ./_local --fixtures tests/fixtures/run2 --today 2026-10-09 --skip-sql
-
-# Mod det rigtige API (stadig lokalt lager)
-python -m dataproduct.run --local-dir ./_local_live --skip-sql
-
-cd ../api
-pip install -r requirements.txt
-python manage.py collectstatic --noinput
-DJANGO_DEBUG=1 python manage.py runserver   # læser ../pipeline/_local som standard
-```
-
-Widgetten: `cd web && python -m http.server` og åbn `http://localhost:8000/preview.html`.
-
 ## Designvalg
 
 - **Idempotens:** hver kørsel henter de seneste 10 bankdage. Merge på `(rate_date, kode)` betyder, at gentagne
